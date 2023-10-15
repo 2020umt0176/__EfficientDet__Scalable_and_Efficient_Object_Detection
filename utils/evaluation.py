@@ -73,34 +73,6 @@ def labelme(ctx: click.Context, **kwargs: Any) -> None:
 @click.option('--root-test', type=click.Path(file_okay=False, exists=True),
               required=True, help='Path to annotations and images')
 @click.pass_context
-def VOC(ctx: click.Context, **kwargs: Any) -> None:
-    kwargs.update(ctx.obj['common'])
-    model, _ = ctx.obj['model'], ctx.obj['params']
-    config = model.config
-    im_size = config.input_size
-
-    class2idx = efficientdet.data.voc.LABEL_2_IDX
-
-    im_size = config.input_size
-
-    ds = efficientdet.data.voc.build_dataset(
-        kwargs['root_test'],
-        im_input_size=im_size,
-        shuffle=False)
-#The dataset is padded into batches, and padding values are specified.
-    ds = ds.padded_batch(batch_size=kwargs['batch_size'],
-                         padded_shapes=((*im_size, 3), 
-                                        ((None,), (None, 4))),
-                         padding_values=(0., (-1, -1.)))
-#This line converts the TensorFlow dataset (ds) to the COCO format using class information (class2idx) and assigns it to gtCOCO.
-    gtCOCO = coco.tf_data_to_COCO(ds, class2idx)
-#This line evaluates the model using the COCO format dataset, the model itself, and other parameters.
-    coco.evaluate(
-        model=model,
-        dataset=ds,
-        steps=sum(1 for _ in ds),
-        gtCOCO=gtCOCO)
-
 
 if __name__ == "__main__":
     main()
